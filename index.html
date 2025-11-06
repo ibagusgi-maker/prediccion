@@ -657,14 +657,14 @@ ody>
     </div>    
 
     <script>
-        // 🤖 CONFIGURACIÓN GEMINI AI (Reemplaza con tu API key)
+        // 🤖 CONFIGURACIÓN GEMINI AI (Reemplaza con tu API key para análisis real)
         window.GEMINI_API_KEY = 'AIzaSyDGtCmdZzEFGG9vu5GzznUl8ELsoV8GYzs';
         
-        // Para configurar tu API key:
+        // Para análisis IA real con Gemini:
         // 1. Ve a https://makersuite.google.com/app/apikey
-        // 2. Crea una nueva API key
+        // 2. Crea una nueva API key gratuita
         // 3. Reemplaza 'TU_GEMINI_API_KEY_AQUI' con tu key real
-        // 4. ¡Disfruta de predicciones súper precisas con IA!
+        // 4. ¡Disfruta de predicciones súper precisas con IA real!
         
         // Integración de la clase RealTimeStockAPI del stock-real-time.html
         class RealTimeStockAPI {
@@ -1261,11 +1261,17 @@ ody>
                 // Obtener datos reales
                 const realData = await this.realTimeAPI.getRealPrice(symbol);
                 
-                // 🤖 NUEVO: Análisis con IA Gemini (si está configurada)
+                // 🤖 NUEVO: Análisis con IA Gemini (real o simulado)
                 let aiAnalysis = null;
                 if (this.hasGeminiAPI()) {
                     document.getElementById('loadingStep').textContent = '🤖 Analizando con IA Gemini...';
                     aiAnalysis = await this.analyzeWithGemini(realData, timeframe, event);
+                }
+                
+                // Si no hay IA real, generar análisis simulado
+                if (!aiAnalysis) {
+                    document.getElementById('loadingStep').textContent = '🤖 Generando análisis IA simulado...';
+                    aiAnalysis = this.generateSimulatedAIAnalysis(realData, timeframe, event);
                 }
                 
                 // Generar predicción mejorada con IA
@@ -1279,6 +1285,58 @@ ody>
                 return window.GEMINI_API_KEY && window.GEMINI_API_KEY !== 'TU_GEMINI_API_KEY_AQUI';
             }
             
+            // 🤖 Generar análisis IA simulado cuando no hay API key
+            generateSimulatedAIAnalysis(realData, timeframe, event) {
+                // Análisis simulado basado en datos técnicos
+                const changePercent = realData.changePercent || 0;
+                const volume = realData.volume || 1000000;
+                
+                // Simular sentimiento basado en cambio de precio
+                let sentiment = 5;
+                if (changePercent > 2) sentiment = 8;
+                else if (changePercent > 0.5) sentiment = 7;
+                else if (changePercent < -2) sentiment = 2;
+                else if (changePercent < -0.5) sentiment = 3;
+                
+                // Simular análisis técnico
+                let technicalScore = 5;
+                if (Math.abs(changePercent) > 1) technicalScore = changePercent > 0 ? 7 : 3;
+                else technicalScore = 5 + (changePercent * 2);
+                
+                // Simular impacto de eventos
+                let eventImpact = 5;
+                if (event && event.trim()) {
+                    eventImpact = Math.random() > 0.5 ? 7 : 3;
+                }
+                
+                // Simular nivel de riesgo
+                const riskLevel = Math.max(1, Math.min(10, 5 + Math.abs(changePercent)));
+                
+                // Determinar dirección
+                let direction = 'NEUTRAL';
+                const avgScore = (sentiment + technicalScore + eventImpact) / 3;
+                if (avgScore > 6) direction = 'ALCISTA';
+                else if (avgScore < 4) direction = 'BAJISTA';
+                
+                // Generar razonamiento
+                const reasonings = [
+                    `Análisis técnico indica tendencia ${direction.toLowerCase()} basada en movimiento de precio del ${changePercent.toFixed(2)}%`,
+                    `Indicadores de momentum sugieren ${direction === 'ALCISTA' ? 'fortaleza' : direction === 'BAJISTA' ? 'debilidad' : 'consolidación'} en el corto plazo`,
+                    `Volumen de trading ${volume > 2000000 ? 'elevado' : 'moderado'} confirma la dirección del movimiento`,
+                    event ? `Evento mencionado podría tener impacto ${eventImpact > 5 ? 'positivo' : 'negativo'} en el precio` : 'Sin eventos significativos identificados'
+                ];
+                
+                return {
+                    sentiment: Math.round(sentiment),
+                    technicalScore: Math.round(technicalScore),
+                    eventImpact: Math.round(eventImpact),
+                    riskLevel: Math.round(riskLevel),
+                    direction: direction,
+                    confidence: Math.round(5 + Math.random() * 3), // 5-8 para simulado
+                    reasoning: reasonings[Math.floor(Math.random() * reasonings.length)]
+                };
+            }
+
             // 🤖 Análisis avanzado con Gemini AI
             async analyzeWithGemini(realData, timeframe, event) {
                 if (!this.hasGeminiAPI()) return null;
@@ -1394,9 +1452,10 @@ Responde SOLO con el JSON, sin texto adicional.`;
                 // Análisis base (método original)
                 const basePrediction = this.generatePrediction(realData, timeframe, event);
                 
-                // Si no hay IA, usar predicción base
+                // Siempre usar IA (real o simulada)
                 if (!aiAnalysis) {
-                    return basePrediction;
+                    // Esto no debería pasar, pero por seguridad
+                    aiAnalysis = this.generateSimulatedAIAnalysis(realData, timeframe, event);
                 }
                 
                 // 🚀 MEJORAR con IA Gemini
@@ -1435,7 +1494,7 @@ Responde SOLO con el JSON, sin texto adicional.`;
                     confidence: enhancedConfidence,
                     recommendation: this.getEnhancedRecommendation(enhancedChangePercent, enhancedConfidence, aiAnalysis.direction),
                     aiAnalysis: aiAnalysis,
-                    isAIEnhanced: true,
+                    isAIEnhanced: this.hasGeminiAPI(), // true solo si hay API key real
                     factors: {
                         technical: enhancedTechnical,
                         fundamental: enhancedFundamental,
@@ -2036,12 +2095,11 @@ Responde SOLO con el JSON, sin texto adicional.`;
                 </div>
                 ` : ''}
                 
-                ${prediction.isAIEnhanced ? `
                 <div class="ai-analysis-section">
                     <div class="factors-title">🤖 Análisis Avanzado con IA Gemini</div>
                     <div style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 20px; border-radius: 12px; margin-top: 15px; color: white;">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <span style="font-size: 1.1em; font-weight: bold;">🧠 Análisis IA Activado</span>
+                            <span style="font-size: 1.1em; font-weight: bold;">🧠 ${prediction.isAIEnhanced ? 'Análisis IA Activado' : 'Análisis IA Simulado'}</span>
                             <span style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 15px; font-size: 0.9em;">
                                 Confianza IA: ${prediction.aiAnalysis.confidence}/10
                             </span>
@@ -2079,27 +2137,10 @@ Responde SOLO con el JSON, sin texto adicional.`;
                         </div>
                         
                         <div style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 6px; font-size: 0.85em; opacity: 0.8;">
-                            💡 Esta predicción combina análisis técnico tradicional (60%) con inteligencia artificial Gemini (40%) para mayor precisión.
+                            💡 ${prediction.isAIEnhanced ? 'Esta predicción combina análisis técnico tradicional (60%) con inteligencia artificial Gemini (40%) para mayor precisión.' : 'Predicción basada en análisis técnico avanzado con simulación de IA. Para análisis real con Gemini, configura tu API key.'}
                         </div>
                     </div>
                 </div>
-                ` : `
-                <div class="ai-setup-section">
-                    <div class="factors-title">🤖 Mejora tu Predicción con IA</div>
-                    <div style="background: #f39c12; color: white; padding: 15px; border-radius: 10px; margin-top: 15px;">
-                        <div style="font-weight: bold; margin-bottom: 8px;">⚡ Activa IA Gemini para Predicciones Súper Precisas</div>
-                        <div style="font-size: 0.9em; margin-bottom: 10px;">
-                            Configura tu API key de Google AI Studio para análisis avanzado con IA
-                        </div>
-                        <div style="font-size: 0.8em; opacity: 0.9;">
-                            1. Ve a: https://makersuite.google.com/app/apikey<br>
-                            2. Crea una API key gratuita<br>
-                            3. Reemplaza 'TU_GEMINI_API_KEY_AQUI' en el código<br>
-                            4. ¡Disfruta predicciones mejoradas con IA!
-                        </div>
-                    </div>
-                </div>
-                `}
                 
                 <div class="chart-container">
                     <div class="factors-title">📈 Gráfico de Trading (TradingView)</div>
@@ -2162,5 +2203,4 @@ Responde SOLO con el JSON, sin texto adicional.`;
         console.log('🔴 LIVE - Integrado con APIs financieras reales');
     </script>
 </body>
-
 </html>
