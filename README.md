@@ -12,6 +12,7 @@ Una aplicación web moderna que utiliza datos auténticos del mercado financiero
 
 ### 🌐 **Datos Reales en Tiempo Real**
 - Integración con **Yahoo Finance** y **Finnhub API**
+- **Soporte especial para acciones argentinas** con Yahoo Finance .BA y Bolsar.info
 - Precios auténticos del mercado
 - Fallback automático con datos simulados realistas
 
@@ -78,10 +79,16 @@ La aplicación es una PWA completa:
 
 Para datos reales mejorados, configura APIs gratuitas:
 
-### **Finnhub API**
+### **🇦🇷 Acciones Argentinas** (Sin configuración necesaria)
+El sistema automáticamente usa:
+- **Yahoo Finance con .BA** (ej: GGAL.BA, YPFD.BA)
+- **Bolsar.info** (web scraping como fallback)
+- No requiere API keys ni configuración
+
+### **Finnhub API** (Para más cobertura internacional)
 1. Regístrate en [finnhub.io](https://finnhub.io)
 2. Obtén tu API key gratuita
-3. Reemplaza `sandbox_c9k8ksiad3i9lbq8qvag` en `index.html`
+3. Reemplaza en `index.html`
 
 Ver [API_KEYS_GUIDE.md](API_KEYS_GUIDE.md) para más detalles.
 
